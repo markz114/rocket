@@ -539,7 +539,7 @@ class Rocket(implicit p: Parameters) extends CoreModule()(p) {
 
   io.rocc.cmd.valid := wb_rocc_val
   io.rocc.exception := wb_xcpt && csr.io.status.xs.orR
-  io.rocc.s := csr.io.status.prv.orR // should we just pass all of mstatus?
+  io.rocc.status := csr.io.status
   io.rocc.cmd.bits.inst := new RoCCInstruction().fromBits(wb_reg_inst)
   io.rocc.cmd.bits.rs1 := wb_reg_wdata
   io.rocc.cmd.bits.rs2 := wb_reg_rs2

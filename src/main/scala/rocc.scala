@@ -47,7 +47,7 @@ class RoCCInterface(implicit p: Parameters) extends CoreBundle()(p) {
   val resp = Decoupled(new RoCCResponse)
   val mem = new HellaCacheIO()(p.alterPartial({ case CacheName => "L1D" }))
   val busy = Bool(OUTPUT)
-  val s = Bool(INPUT)
+  val status = new MStatus().asInput
   val interrupt = Bool(OUTPUT)
   
   // These should be handled differently, eventually
