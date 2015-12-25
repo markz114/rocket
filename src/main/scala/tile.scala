@@ -95,16 +95,13 @@ class RocketTile(resetSignal: Bool = null)(implicit p: Parameters) extends Tile(
 
     if (nFPUPorts > 0) {
       fpuOpt.foreach { fpu =>
-        val fpArb = Module(new InOrderArbiter(new FPInput, new FPResult, nFPUPorts))
-        val fp_roccs = roccs.zip(buildRocc)
+        val fpArb = Module(new FPSideArbiter(nFPUPorts))
+        val fpIF = Module(new FPSideInterface)
+        fpArb.io.in <> roccs.zip(buildRocc)
           .filter { case (_, params) => params.useFPU }
-          .map { case (rocc, _) => rocc.io }
-        fpArb.io.in_req <> fp_roccs.map(_.fpu_req)
-        fp_roccs.zip(fpArb.io.in_resp).foreach {
-          case (rocc, fpu_resp) => rocc.fpu_resp <> fpu_resp
-        }
-        fpu.io.cp_req <> fpArb.io.out_req
-        fpArb.io.out_resp <> fpu.io.cp_resp
+          .map { case (rocc, _) => rocc.io.fpu }
+        fpIF.io.in <> fpArb.io.out
+        fpu.io.side <> fpIF.io.out
       }
     }
 
@@ -131,8 +128,7 @@ class RocketTile(resetSignal: Bool = null)(implicit p: Parameters) extends Tile(
 
   if (!usingRocc || nFPUPorts == 0) {
     fpuOpt.foreach { fpu =>
-      fpu.io.cp_req.valid := Bool(false)
-      fpu.io.cp_resp.ready := Bool(false)
+      fpu.io.side.req.valid := Bool(false)
     }
   }
 }

@@ -27,6 +27,17 @@ object Util {
 
   def minUInt(first: UInt, rest: UInt*): UInt =
     minUInt(first +: rest.toSeq)
+
+  def bitpatJoin(a: BitPat, b: BitPat): BitPat =
+    new BitPat(a.value << b.getWidth | b.value,
+               a.mask  << b.getWidth | b.mask,
+               a.getWidth + b.getWidth)
+
+  def bitpatCat(pats: BitPat*): BitPat =
+    pats.reduceLeft(bitpatJoin(_, _))
+
+  def makeBitPat(x: Int, w: Int): BitPat =
+    new BitPat(BigInt(x), BigInt((1 << w) - 1), w)
 }
 
 import Util._

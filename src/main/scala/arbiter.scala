@@ -55,6 +55,29 @@ class HellaCacheArbiter(n: Int)(implicit p: Parameters) extends Module
   }
 }
 
+class FPSideArbiter(n: Int) extends Module {
+  val io = new Bundle {
+    val in = Vec(n, new FPSideIO).flip
+    val out = new FPSideIO
+  }
+
+  if (n > 1) {
+    val reqArb = Module(new RRArbiter(new FPRequest, n))
+    reqArb.io.in <> io.in.map(_.req)
+    io.out.req <> reqArb.io.out
+    io.out.req.bits.id := Cat(reqArb.io.out.bits.id, reqArb.io.chosen)
+
+    for (i <- 0 until n) {
+      val me = io.out.resp.bits.id(log2Up(n)-1, 0) === UInt(i)
+      io.in(i).resp.bits := io.out.resp.bits
+      io.in(i).resp.bits.id := io.out.resp.bits.id >> UInt(log2Up(n))
+      io.in(i).resp.valid := io.out.resp.valid && me
+      io.in(i).frm := io.out.frm
+      io.in(i).fflags := io.out.fflags
+    }
+  } else { io.out <> io.in.head }
+}
+
 class InOrderArbiter[T <: Data, U <: Data](reqTyp: T, respTyp: U, n: Int)
     (implicit p: Parameters) extends Module {
   val io = new Bundle {

@@ -54,8 +54,7 @@ class RoCCInterface(implicit p: Parameters) extends CoreBundle()(p) {
   val autl = new ClientUncachedTileLinkIO
   val utl = Vec(p(RoccNMemChannels), new ClientUncachedTileLinkIO)
   val ptw = Vec(p(RoccNPTWPorts), new TLBPTWIO)
-  val fpu_req = Decoupled(new FPInput)
-  val fpu_resp = Decoupled(new FPResult).flip
+  val fpu = new FPSideIO
   val exception = Bool(INPUT)
   val csr = (new RoCCCSRs).flip
   val host_id = UInt(INPUT, log2Up(nCores))
