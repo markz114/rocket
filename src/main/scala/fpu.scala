@@ -423,7 +423,7 @@ class FPU extends Module
   io.store_data := fpiu.io.out.bits.store
   io.toint_data := fpiu.io.out.bits.toint
 
-  val ifpu = Module(new IntToFP(2))
+  val ifpu = Module(new IntToFP(3))
   ifpu.io.in.valid := ex_reg_valid && ex_ctrl.fromint
   ifpu.io.in.bits := req
   ifpu.io.in.bits.in1 := io.fromint_data
