@@ -516,6 +516,20 @@ class Rocket(implicit p: Parameters) extends CoreModule()(p) {
   io.imem.ras_update.bits.isReturn := io.imem.btb_update.bits.isReturn
   io.imem.ras_update.bits.prediction := io.imem.btb_update.bits.prediction
 
+  // maintain a copy of the committed global history for the BHT. On a pipeline
+  // reset, rollback the history to clear any speculative updates. The BHT only
+  // tracks branches that were a hit in the BTB.
+  val nbhtbits = log2Up(p(BtbKey).nEntries).max(1)
+  val com_global_history = Reg(Bits(width = nbhtbits))
+  val com_br_valid = io.imem.bht_update.valid && io.imem.bht_update.bits.prediction.valid
+  val com_br_taken = io.imem.bht_update.bits.taken
+  when (com_br_valid) {
+    com_global_history := Cat(com_br_taken, com_global_history(nbhtbits-1,1))
+  }
+  io.imem.bht_update.bits.rollback.valid := mem_reg_replay
+  io.imem.bht_update.bits.rollback.bits.history := com_global_history
+
+
   io.fpu.valid := !ctrl_killd && id_ctrl.fp
   io.fpu.killx := ctrl_killx
   io.fpu.killm := killm_common

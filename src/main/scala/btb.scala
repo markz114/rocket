@@ -63,6 +63,8 @@ class BHTResp(implicit p: Parameters) extends BtbBundle()(p) {
 //    - each counter corresponds with the address of the fetch packet ("fetch pc").
 //    - updated when a branch resolves (and BTB was a hit for that branch).
 //      The updating branch must provide its "fetch pc".
+// As the global history is speculative, a seperate "commit" copy must be
+// passed in for resets on pipeline flushes, etc.
 class BHT(nbht: Int)(implicit p: Parameters) {
   val nbhtbits = log2Up(nbht)
   def get(addr: UInt, update: Bool): BHTResp = {
@@ -78,6 +80,9 @@ class BHT(nbht: Int)(implicit p: Parameters) {
     val index = addr(nbhtbits+1,2) ^ d.history
     table(index) := Cat(taken, (d.value(1) & d.value(0)) | ((d.value(1) | d.value(0)) & taken))
     when (mispredict) { history := Cat(taken, d.history(nbhtbits-1,1)) }
+  }
+  def rollback(committed_history: Bits): Unit = {
+    history := committed_history
   }
 
   private val table = Mem(nbht, UInt(width = 2))
@@ -99,11 +104,14 @@ class BTBUpdate(implicit p: Parameters) extends BtbBundle()(p) {
 
 // BHT update occurs during branch resolution on all conditional branches.
 //  - "pc" is what future fetch PCs will tag match against.
+//  - "rollback" resets the BHT's global history to the committed history
+//    (which is passed in via rollback.bits.history).
 class BHTUpdate(implicit p: Parameters) extends BtbBundle()(p) {
   val prediction = Valid(new BTBResp)
   val pc = UInt(width = vaddrBits)
   val taken = Bool()
   val mispredict = Bool()
+  val rollback = Valid(new BHTResp)
 }
 
 class RASUpdate(implicit p: Parameters) extends BtbBundle()(p) {
@@ -269,6 +277,9 @@ class BTB(implicit p: Parameters) extends BtbModule {
     val update_btb_hit = io.bht_update.bits.prediction.valid
     when (io.bht_update.valid && update_btb_hit) {
       bht.update(io.bht_update.bits.pc, io.bht_update.bits.prediction.bits.bht, io.bht_update.bits.taken, io.bht_update.bits.mispredict)
+    }
+    when (io.bht_update.bits.rollback.valid) {
+      bht.rollback(io.bht_update.bits.rollback.bits.history)
     }
     when (!res.value(0) && isBranch) { io.resp.bits.taken := false }
     io.resp.bits.bht := res
