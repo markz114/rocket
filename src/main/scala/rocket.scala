@@ -526,7 +526,7 @@ class Rocket(implicit p: Parameters) extends CoreModule()(p) {
   when (com_br_valid) {
     com_global_history := Cat(com_br_taken, com_global_history(nbhtbits-1,1))
   }
-  io.imem.bht_update.bits.rollback.valid := mem_reg_replay
+  io.imem.bht_update.bits.rollback.valid := Bool(false) //roll-back disabled! //mem_reg_replay
   io.imem.bht_update.bits.rollback.bits.history := com_global_history
 
 
