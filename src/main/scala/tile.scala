@@ -108,7 +108,7 @@ class RocketTile(resetSignal: Bool = null)(implicit p: Parameters) extends Tile(
       }
     }
 
-    ptw.io.requestor.drop(2) <> roccs.flatMap(_.io.ptw)
+    roccs.flatMap(_.io.ptw).zip(ptw.io.requestor.drop(2)).foreach{ case (rocc, tile) => tile <> rocc }
 
     core.io.rocc.busy := cmdRouter.io.busy || roccs.map(_.io.busy).reduce(_ || _)
     core.io.rocc.interrupt := roccs.map(_.io.interrupt).reduce(_ || _)
