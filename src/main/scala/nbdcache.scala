@@ -822,9 +822,7 @@ class HellaCache(implicit p: Parameters) extends L1HellaCacheModule()(p) {
 
   assert (!(Reg(next=
     (io.cpu.xcpt.ma.ld || io.cpu.xcpt.ma.st || io.cpu.xcpt.pf.ld || io.cpu.xcpt.pf.st)) &&
-    io.cpu.resp.valid &&
-    s2_valid &&
-    Reg(next=s1_req.tag) === io.cpu.resp.bits.tag),
+    s2_valid_masked),
       "DCache exception occurred - cache response not killed.")
 
   // tags
