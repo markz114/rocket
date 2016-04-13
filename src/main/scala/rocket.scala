@@ -440,6 +440,9 @@ class Rocket(implicit p: Parameters) extends CoreModule()(p) {
   csr.io.rw.cmd := Mux(wb_reg_valid, wb_ctrl.csr, CSR.N)
   csr.io.rw.wdata := wb_reg_wdata
 
+  //Add the secure_config_reg as a wire in the processor
+  val sec_reg = csr.io.sec_reg
+
   val hazard_targets = Seq((id_ctrl.rxs1 && id_raddr1 =/= UInt(0), id_raddr1),
                            (id_ctrl.rxs2 && id_raddr2 =/= UInt(0), id_raddr2),
                            (id_ctrl.wxd  && id_waddr  =/= UInt(0), id_waddr))

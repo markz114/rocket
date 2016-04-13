@@ -46,13 +46,14 @@ import ALU._
 
 class ALU(implicit p: Parameters) extends CoreModule()(p) {
   val io = new Bundle {
-    val dw = Bits(INPUT, SZ_DW)
-    val fn = Bits(INPUT, SZ_ALU_FN)
-    val in2 = UInt(INPUT, xLen)
-    val in1 = UInt(INPUT, xLen)
-    val out = UInt(OUTPUT, xLen)
-    val adder_out = UInt(OUTPUT, xLen)
-    val cmp_out = Bool(OUTPUT)
+    val sec_reg = Label(UInt(INPUT, 1), "L")
+    val dw = Label(Bits(INPUT, SZ_DW), IfType(sec_reg, "H", "L"))
+    val fn = Label(Bits(INPUT, SZ_ALU_FN), IfType(sec_reg, "H", "L"))
+    val in2 = Label(UInt(INPUT, xLen), IfType(sec_reg, "H", "L"))
+    val in1 = Label(UInt(INPUT, xLen), IfType(sec_reg, "H", "L"))
+    val out = Label(UInt(OUTPUT, xLen), IfType(sec_reg, "H", "L"))
+    val adder_out = Label(UInt(OUTPUT, xLen), IfType(sec_reg, "H", "L"))
+    val cmp_out = Label(Bool(OUTPUT), IfType(sec_reg, "H", "L"))
   }
 
   // ADD, SUB

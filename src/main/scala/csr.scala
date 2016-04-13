@@ -88,6 +88,8 @@ class CSRFileIO(implicit p: Parameters) extends CoreBundle {
   val csr_xcpt = Bool(OUTPUT)
   val eret = Bool(OUTPUT)
 
+  val sec_reg = UInt(OUTPUT, 1)
+
   val prv = UInt(OUTPUT, PRV.SZ)
   val status = new MStatus().asOutput
   val ptbr = UInt(OUTPUT, paddrBits)
@@ -139,6 +141,9 @@ class CSRFile(implicit p: Parameters) extends CoreModule()(p)
     Causes.fault_load,
     Causes.fault_store,
     Causes.user_ecall).map(1 << _).sum)
+
+  //Tag that stores the current state of the world.
+  val secure_config_reg = Reg(init=UInt(0,1))
 
   val reg_mie = Reg(init=UInt(0, xLen))
   val reg_mideleg = Reg(init=UInt(0, xLen))
@@ -507,4 +512,6 @@ class CSRFile(implicit p: Parameters) extends CoreModule()(p)
   io.rocc.csr.waddr := addr
   io.rocc.csr.wdata := wdata
   io.rocc.csr.wen := wen
+
+  io.sec_reg := secure_config_reg
 }
